@@ -58,7 +58,8 @@ def provide_data(split_name, batch_size, dataset_dir, num_readers=1,
 
   # Preprocess the images.
   image = (tf.to_float(image)) / 255.0
-  image = tf.reshape(image, [-1])
+  image = 2.0 * image - 1.0
+  # image = tf.reshape(image, [-1])
 
   # Creates a QueueRunner for the pre-fetching operation.
   images, labels = tf.train.batch(
