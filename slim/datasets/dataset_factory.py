@@ -18,10 +18,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from datasets import cifar10
-from datasets import flowers
-from datasets import imagenet
-from datasets import mnist
+from slim.datasets import cifar10
+from slim.datasets import flowers
+from slim.datasets import imagenet
+from slim.datasets import mnist
 
 datasets_map = {
     'cifar10': cifar10,
