@@ -31,15 +31,6 @@ flags.DEFINE_integer(
 FLAGS = flags.FLAGS
 
 
-def _learning_rate(gan_type):
-    # First is generator learning rate, second is discriminator learning rate.
-    return {
-        'unconditional': (1e-3, 1e-4),
-        'conditional': (1e-5, 1e-4),
-        'infogan': (0.001, 9e-5),
-    }[gan_type]
-
-
 def main(_):
     if not tf.gfile.Exists(FLAGS.train_log_dir):
         tf.gfile.MakeDirs(FLAGS.train_log_dir)
@@ -73,7 +64,7 @@ def main(_):
 
     # Get the GANTrain ops using custom optimizers.
     with tf.name_scope('train'):
-        gen_lr, dis_lr = _learning_rate(FLAGS.gan_type)
+        gen_lr, dis_lr = (1e-3, 1e-4)
         train_ops = tfgan.gan_train_ops(
             gan_model,
             gan_loss,
