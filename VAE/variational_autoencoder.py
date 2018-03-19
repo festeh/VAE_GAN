@@ -14,7 +14,7 @@ class VAE(object):
     """Variational AutoEncoder
     """
 
-    def __init__(self, mode, z_dim=100, h_dim=128, batch_size=64, data_path=None):
+    def __init__(self, mode, z_dim=100, h_dim=128, batch_size=64, data_path=None, verbose=False):
         """Basic setup.
         """
         assert mode in ["train", "generate"]
@@ -22,11 +22,15 @@ class VAE(object):
         self.n_samples = None
 
         self.batch_size = batch_size
+        self.data_path = data_path
 
         self.z_dim = z_dim  # number of dimension of the latent variable `z`
         self.h_dim = h_dim  # number of dimension of hidden layer
 
         self.data_path = data_path
+        self.batch_size = batch_size
+
+        self.verbose = verbose
 
         print('The mode is %s.' % self.mode)
         print('complete initializing model.')
@@ -40,7 +44,8 @@ class VAE(object):
                 #                              name='inputs')
                 with tf.device('/cpu:0'):
                     self.inputs, one_hot_labels, self.n_samples = provide_data(
-                        'train', FLAGS.batch_size, FLAGS.data_path, num_threads=4)
+                        'train', self.batch_size, self.data_path, num_threads=4)
+                    self.inputs = tf.reshape(self.inputs, [self.inputs.get_shape()[0], -1])
 
         if self.mode == "generate":
             with tf.variable_scope('random_z'):
@@ -57,7 +62,7 @@ class VAE(object):
           z_mu: Multi variate normal distribution parameters
           z_log_sigma: Multi variate normal distribution parameters
         """
-        with tf.variable_scope('Encoder'):
+        with tf.variable_scope('Encoder', reuse=tf.AUTO_REUSE):
             layer1 = layers.fully_connected(inputs=inputs,
                                             num_outputs=self.h_dim,
                                             scope='fc1')
@@ -99,7 +104,7 @@ class VAE(object):
           logits: logits from P(X|z) for reconstruction loss
           probability: sigmoid activation of logits for generating images
         """
-        with tf.variable_scope('Decoder') as scope:
+        with tf.variable_scope('Decoder', reuse=tf.AUTO_REUSE) as scope:
             layer1 = layers.fully_connected(inputs=inputs,
                                             num_outputs=self.h_dim,
                                             scope='fc1')
@@ -168,7 +173,8 @@ class VAE(object):
 
             # Print all training variables
             t_vars = tf.trainable_variables()
-            for var in t_vars:
-                print(var.name)
+            if self.verbose:
+                for var in t_vars:
+                    print(var.name)
 
         print('complete model build.')

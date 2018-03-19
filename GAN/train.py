@@ -8,9 +8,9 @@ import tensorflow.contrib.gan as tfgan
 
 
 
-flags.DEFINE_integer('batch_size', 32, 'The number of images in each batch.')
+flags.DEFINE_integer('batch_size', 64, 'The number of images in each batch.')
 
-flags.DEFINE_string('train_log_dir', '/tmp/mnist_norm_images',
+flags.DEFINE_string('train_log_dir', 'mnist_norm_images',
                     'Directory where to write event logs.')
 
 flags.DEFINE_string('dataset_dir', "../data/mnist", 'Location of data.')
@@ -49,6 +49,7 @@ def main(_):
     with tf.name_scope('inputs'):
         with tf.device('/cpu:0'):
             images, one_hot_labels, _ = provide_data('train', FLAGS.batch_size, FLAGS.dataset_dir, num_threads=4)
+            images = 2.0 * images - 1.0
 
     gan_model = tfgan.gan_model(
         generator_fn=gan_networks.generator,
@@ -57,7 +58,7 @@ def main(_):
         generator_inputs=tf.random_normal(
             [FLAGS.batch_size, FLAGS.noise_dims]))
 
-    tfgan.eval.add_gan_model_image_summaries(gan_model, FLAGS.grid_size)
+    tfgan.eval.add_gan_model_image_summaries(gan_model, FLAGS.grid_size, False)
 
     # Get the GANLoss tuple. You can pass a custom function, use one of the
     # already-implemented losses from the losses library, or use the defaults.

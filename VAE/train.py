@@ -1,10 +1,7 @@
-
 import os
 import numpy as np
 import time
-
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
 
 import variational_autoencoder as vae
 
@@ -18,7 +15,7 @@ tf.app.flags.DEFINE_string('train_dir',
                            'Directory where checkpoints and event logs are written to.')
 
 tf.app.flags.DEFINE_string('data_path',
-                           '/home/dima/Projects/thesis_tf/data/mnist',
+                           '../data/mnist',
                            'Directory where the data is stored')
 tf.app.flags.DEFINE_integer('max_steps',
                             100000,
@@ -45,7 +42,7 @@ tf.app.flags.DEFINE_float('initial_learning_rate',
 # VAE network setting #
 #######################
 tf.app.flags.DEFINE_integer('z_dim',
-                            100,
+                            64,
                             'The dimension of latent variable z.')
 tf.app.flags.DEFINE_integer('h_dim',
                             128,
@@ -62,7 +59,7 @@ def main(_):
     with tf.Graph().as_default():
 
         # Build the model.
-        model = vae.VAE(mode="train")
+        model = vae.VAE(mode="train", z_dim=FLAGS.z_dim)
         model.build()
 
         # Create global step
@@ -114,7 +111,7 @@ def main(_):
                 epochs = step * FLAGS.batch_size / model.n_samples
                 duration = time.time() - start_time
 
-                if step % 10 == 0:
+                if step % 50 == 0:
                     examples_per_sec = FLAGS.batch_size / float(duration)
                     print("Epochs: %.2f step: %d  loss: %f (%.1f examples/sec; %.3f sec/batch)"
                           % (epochs, step, loss, examples_per_sec, duration))
