@@ -2,9 +2,8 @@ import os
 import numpy as np
 import time
 import tensorflow as tf
-
 import variational_autoencoder as vae
-
+from gan_tf_examples.mnist.data_provider import provide_data
 slim = tf.contrib.slim
 
 ##################
@@ -52,14 +51,15 @@ FLAGS = tf.app.flags.FLAGS
 
 
 def main(_):
-    # if tf.gfile.Exists(FLAGS.train_dir):
-    #     raise ValueError('This folder already exists.')
-    # tf.gfile.MakeDirs(FLAGS.train_dir)
-
     with tf.Graph().as_default():
 
+        with tf.variable_scope('read_mnist'):
+            with tf.device('/cpu:0'):
+                inputs, one_hot_labels, n_samples = provide_data('train',
+                                                                      FLAGS.batch_size,
+                                                                      FLAGS.data_path, num_threads=4)
         # Build the model.
-        model = vae.VAE(mode="train", z_dim=FLAGS.z_dim)
+        model = vae.VAE(mode="train", z_dim=FLAGS.z_dim, data_tensor=inputs)
         model.build()
 
         # Create global step
@@ -108,7 +108,7 @@ def main(_):
                 _, loss = sess.run([opt_op,
                                     model.loss])
 
-                epochs = step * FLAGS.batch_size / model.n_samples
+                epochs = step * FLAGS.batch_size / n_samples
                 duration = time.time() - start_time
 
                 if step % 50 == 0:

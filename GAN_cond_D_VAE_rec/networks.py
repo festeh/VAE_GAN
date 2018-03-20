@@ -29,15 +29,18 @@ def discriminator(img, inputs, weight_decay=2.5e-5):
             activation_fn= lambda x: tf.nn.leaky_relu(x, alpha=0.01), normalizer_fn=None,
             weights_regularizer=layers.l2_regularizer(weight_decay),
             biases_regularizer=layers.l2_regularizer(weight_decay)):
-        net = layers.conv2d(img, 64, [4, 4], stride=2)
-        net = layers.conv2d(net, 128, [4, 4], stride=2)
-        net = layers.flatten(net)
-        net = layers.fully_connected(net, 1024, normalizer_fn=layers.layer_norm)
 
-        add_net = layers.conv2d(img_rec, 32, [4, 4], stride=2)
-        add_net = layers.conv2d(add_net, 64, [4, 4], stride=2)
-        add_net = layers.flatten(add_net)
-        add_net = layers.fully_connected(add_net, 512, normalizer_fn=layers.layer_norm)
+        with tf.variable_scope("img_channel") as scope:
+            net = layers.conv2d(img, 64, [4, 4], stride=2)
+            net = layers.conv2d(net, 128, [4, 4], stride=2)
+            net = layers.flatten(net)
+            net = layers.fully_connected(net, 1024, normalizer_fn=layers.layer_norm)
 
-        net = layers.linear(tf.concat([net, add_net], -1), 1)
-        return net
+        with tf.variable_scope("reconstruction_channel"):
+            add_net = layers.conv2d(img_rec, 32, [4, 4], stride=2)
+            add_net = layers.conv2d(add_net, 64, [4, 4], stride=2)
+            add_net = layers.flatten(add_net)
+            add_net = layers.fully_connected(add_net, 512, normalizer_fn=layers.layer_norm)
+
+        combined_net = layers.linear(tf.concat([net, add_net], -1), 1)
+        return combined_net

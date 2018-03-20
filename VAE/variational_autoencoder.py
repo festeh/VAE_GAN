@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import tensorflow as tf
-from gan_tf_examples.mnist.data_provider import provide_data
+
 
 slim = tf.contrib.slim
 layers = tf.contrib.layers
@@ -14,7 +14,7 @@ class VAE(object):
     """Variational AutoEncoder
     """
 
-    def __init__(self, mode, z_dim=100, h_dim=128, batch_size=64, data_path=None, verbose=False):
+    def __init__(self, mode, z_dim=100, h_dim=128, batch_size=64, data_tensor=None, verbose=False):
         """Basic setup.
         """
         assert mode in ["train", "generate"]
@@ -22,14 +22,10 @@ class VAE(object):
         self.n_samples = None
 
         self.batch_size = batch_size
-        self.data_path = data_path
+        self.data_tensor = data_tensor
 
         self.z_dim = z_dim  # number of dimension of the latent variable `z`
         self.h_dim = h_dim  # number of dimension of hidden layer
-
-        self.data_path = data_path
-        self.batch_size = batch_size
-
         self.verbose = verbose
 
         print('The mode is %s.' % self.mode)
@@ -38,14 +34,10 @@ class VAE(object):
     def read_mnist_from_placeholder(self):
         # Setup the placeholder of data
         if self.mode == "train":
-            with tf.variable_scope('read_mnist'):
-                # self.inputs = tf.placeholder(dtype=tf.float32,
-                #                              shape=[self.batch_size, 784],
-                #                              name='inputs')
-                with tf.device('/cpu:0'):
-                    self.inputs, one_hot_labels, self.n_samples = provide_data(
-                        'train', self.batch_size, self.data_path, num_threads=4)
-                    self.inputs = tf.reshape(self.inputs, [self.inputs.get_shape()[0], -1])
+            if self.data_tensor is not None:
+                self.inputs = self.data_tensor
+                self.inputs = tf.reshape(self.inputs, [self.inputs.get_shape()[0], -1])
+
 
         if self.mode == "generate":
             with tf.variable_scope('random_z'):
@@ -178,3 +170,7 @@ class VAE(object):
                     print(var.name)
 
         print('complete model build.')
+
+    def reconstruct(self, images):
+        images = tf.reshape(images, [images.get_shape()[0], -1])
+        return self.Decoder(self.sampling_z(*self.Encoder(images)))[1]
