@@ -9,7 +9,7 @@ from VAE.variational_autoencoder import VAE
 
 flags.DEFINE_integer('batch_size', 64, 'The number of images in each batch.')
 
-flags.DEFINE_string('train_log_dir', 'mnist_norm_images',
+flags.DEFINE_string('train_log_dir', 'mnist_norm_images_D_cond',
                     'Directory where to write event logs.')
 
 flags.DEFINE_string('dataset_dir', "../data/mnist", 'Location of data.')
@@ -26,7 +26,7 @@ flags.DEFINE_string(
     'Either `unconditional`, `conditional`, or `infogan`.')
 
 flags.DEFINE_integer(
-    'grid_size', 5, 'Grid size for image visualization.')
+    'grid_size', 8, 'Grid size for image visualization.')
 
 flags.DEFINE_integer(
     'noise_dims', 64, 'Dimensions of the generator noise vector.')
@@ -82,16 +82,13 @@ def main(_):
         ['Starting train step: ',
          tf.as_string(tf.train.get_or_create_global_step())],
         name='status_message')
-    if FLAGS.max_number_of_steps == 0:
-        return
 
-    global_step = tf.train.get_or_create_global_step()
     step_hooks = tfgan.get_sequential_train_hooks()(train_ops)
-
-    hooks = [tf.train.StopAtStepHook(num_steps=FLAGS.max_number_of_steps), ] + list(step_hooks)
+    hooks = [tf.train.StopAtStepHook(num_steps=FLAGS.max_number_of_steps),
+             tf.train.LoggingTensorHook([status_message], every_n_iter=10)] + list(step_hooks)
 
     with tf.train.MonitoredTrainingSession(hooks=hooks,
-                                           save_summaries_steps=100,
+                                           save_summaries_steps=500,
                                            checkpoint_dir=FLAGS.train_log_dir) as sess:
         saver.restore(sess, vae_checkpoint_path)
         loss = None
